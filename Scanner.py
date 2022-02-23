@@ -2,6 +2,7 @@ from scapy.all import *
 from sympy import N
 
 ip_addr = '172.16.0.90'
+#ip_addr = '119.75.217.109' # www.baidu.com
 ports = range(8880, 8900, 1)
 
 
@@ -42,52 +43,55 @@ def udp_scan(target, ports):
         if pkt is None:
             print_ports(port, "Open / filtered")
         else:
-            if pkt.haslayer(ICMP) and int(pkt.getlayer(ICMP).code) == 3:
+            if pkt.haslayer(ICMP):
+                if int(pkt.getlayer(ICMP).code) == 3:
                 # ICMP.code = port-unreachable
-                '''
-                ###[ IP ]### 
-                version   = 4
-                ihl       = 5
-                tos       = 0xc0
-                len       = 56
-                id        = 44972
-                flags     = 
-                frag      = 0
-                ttl       = 63
-                proto     = icmp
-                chksum    = 0x14c1
-                src       = 172.16.0.90
-                dst       = 10.8.0.38
-                \options   \
-                ###[ ICMP ]### 
-                    type      = dest-unreach
-                    code      = port-unreachable
-                    chksum    = 0xb3ae
-                    reserved  = 0
-                    length    = 0
-                    nexthopmtu= 0
-                    unused    = ''
-                ###[ IP in ICMP ]### 
-                        version   = 4
-                        ihl       = 5
-                        tos       = 0x0
-                        len       = 28
-                        id        = 1
-                        flags     = 
-                        frag      = 0
-                        ttl       = 63
-                        proto     = udp
-                        chksum    = 0xc538
-                        src       = 10.8.0.38
-                        dst       = 172.16.0.90
-                        \options   \
-                ###[ UDP in ICMP ]### 
-                        sport     = 8885
-                        dport     = 8885
-                        len       = 8
-                        chksum    = 0x3dc
-                '''
-                print_ports(port, "Closed")
+                    '''
+                    ###[ IP ]### 
+                    version   = 4
+                    ihl       = 5
+                    tos       = 0xc0
+                    len       = 56
+                    id        = 44972
+                    flags     = 
+                    frag      = 0
+                    ttl       = 63
+                    proto     = icmp
+                    chksum    = 0x14c1
+                    src       = 172.16.0.90
+                    dst       = 10.8.0.38
+                    \options   \
+                    ###[ ICMP ]### 
+                        type      = dest-unreach
+                        code      = port-unreachable
+                        chksum    = 0xb3ae
+                        reserved  = 0
+                        length    = 0
+                        nexthopmtu= 0
+                        unused    = ''
+                    ###[ IP in ICMP ]### 
+                            version   = 4
+                            ihl       = 5
+                            tos       = 0x0
+                            len       = 28
+                            id        = 1
+                            flags     = 
+                            frag      = 0
+                            ttl       = 63
+                            proto     = udp
+                            chksum    = 0xc538
+                            src       = 10.8.0.38
+                            dst       = 172.16.0.90
+                            \options   \
+                    ###[ UDP in ICMP ]### 
+                            sport     = 8885
+                            dport     = 8885
+                            len       = 8
+                            chksum    = 0x3dc
+                    '''
+                    print_ports(port, "Closed")
+                elif int(pkt.getlayer(ICMP).type) == 3 and int(pkt.getlayer(ICMP).code) in {1, 2, 9, 10, 13}:
+                    print_ports(port, "ICMP resp / filtered, can't get the port state.")
             elif pkt.haslayer(UDP):
                 print('udp')
                 print_ports(port, "Open / filtered")
@@ -100,15 +104,16 @@ def xmas_scan(target, ports):
 	print("Xmas scan on, %s with ports %s" %(target, ports))
 	sport = RandShort()
 	for port in ports:
-		pkt = sr1(IP(dst=target)/TCP(sport=sport, dport=port, flags="FPU"), timeout=1, verbose=0)
+		pkt = sr1(IP(dst=target)/TCP(sport=sport, dport=port, flags="FPU"), timeout=1, verbose=0)   # URG，PUSH，FIN flag is True.
 		if pkt is not None:
 			if pkt.haslayer(TCP):
 				if pkt[TCP].flags == 20:
+                    # RA mean port close.
 					print_ports(port, "Closed")
 				else:
 					print_ports(port, "TCP flag %s" % pkt[TCP].flag)
-			elif pkt.haslayer(ICMP):
-				print_ports(port, "ICMP resp / filtered")
+			elif pkt.haslayer(ICMP) and int(pkt.getlayer(ICMP).type) == 3 and int(pkt.getlayer(ICMP).code) in {1, 2, 3, 9, 10, 13}:
+				print_ports(port, "ICMP resp / filtered, can't get the port state.")
 			else:
 				print_ports(port, "Unknown resp")
 				print(pkt.summary())
