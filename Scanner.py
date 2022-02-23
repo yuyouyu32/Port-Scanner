@@ -1,9 +1,10 @@
+from email.policy import default
 from scapy.all import *
-from sympy import N
+import click
 
 ip_addr = '172.16.0.90'
-#ip_addr = '119.75.217.109' # www.baidu.com
-ports = range(8880, 8900, 1)
+# ip_addr = '119.75.217.109' # www.baidu.com
+ports = range(8880, 8890, 1)
 
 
 def print_ports(port, state):
@@ -120,8 +121,25 @@ def xmas_scan(target, ports):
 		else:
 			print_ports(port, "Open / filtered")
 
-        
+ALLOWED_METHOD = {'syn': syn_scan, 'udp': udp_scan, 'xmas': xmas_scan}
 
-# result = pscan_tcp_syn(IP_addr, ports)
-# print(result)
-udp_scan(ip_addr, ports)
+@click.command()
+@click.option('--encrypt/--no-encrypt', '-e', default=False, help='Encryption')
+@click.option('--decrypt/--no-decrypt', '-d', default=False, help='Decryption')
+@click.option('--ip', '-i', default='172.16.0.90', type=str, help='Destination IP of the port scanner or attack program.')
+@click.option('--sport', '-s', default=8880, type=int, help='The starting port of the port scanner.')
+@click.option('--eport', '-e', default=8890, type=int, help='The ending port of the port scanner.')
+@click.option('--method', '-m', default='syn', type=str, help='Port scanning or network attack methods.')
+def scanner(encrypt, decrypt, ip, sport, eport, method):
+    if method not in ALLOWED_METHOD.keys():
+        click.echo('Please enter a legal method(syn, udp, xmas)!')
+        return 
+    else:
+        ALLOWED_METHOD[method](ip, range(sport, eport))
+        return 
+
+
+
+
+if __name__ == '__main__':
+    scanner()
