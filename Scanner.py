@@ -1,4 +1,3 @@
-from email.policy import default
 from scapy.all import *
 import click
 
@@ -124,13 +123,13 @@ def xmas_scan(target, ports):
 ALLOWED_METHOD = {'syn': syn_scan, 'udp': udp_scan, 'xmas': xmas_scan}
 
 @click.command()
-@click.option('--encrypt/--no-encrypt', '-e', default=False, help='Encryption')
-@click.option('--decrypt/--no-decrypt', '-d', default=False, help='Decryption')
+# @click.option('--encrypt/--no-encrypt', '-e', default=False, help='Encryption')
+# @click.option('--decrypt/--no-decrypt', '-d', default=False, help='Decryption')
 @click.option('--ip', '-i', default='172.16.0.90', type=str, help='Destination IP of the port scanner or attack program.')
 @click.option('--sport', '-s', default=8880, type=int, help='The starting port of the port scanner.')
 @click.option('--eport', '-e', default=8890, type=int, help='The ending port of the port scanner.')
 @click.option('--method', '-m', default='syn', type=str, help='Port scanning or network attack methods.')
-def scanner(encrypt, decrypt, ip, sport, eport, method):
+def scanner(ip, sport, eport, method):
     if method not in ALLOWED_METHOD.keys():
         click.echo('Please enter a legal method(syn, udp, xmas)!')
         return 
