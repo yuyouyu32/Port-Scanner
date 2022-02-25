@@ -2,9 +2,7 @@ import click
 from Scanner import *
 from Attacker import *
 from prettytable import PrettyTable
-import logging
 
-logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 
 SCAN_METHOD = {'tcp': TCPConnScan, 'syn': TCPSynScan, 'xmas': TCPXmasScan, 'fin': TCPFinScan,
                'null': TCPNullScan, 'ack': TCPAckScan, 'win': TCPWindowScan, 'udp': UDPScan}
