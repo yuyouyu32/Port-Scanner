@@ -1,3 +1,6 @@
+import logging
+
+logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 from scapy.all import *
 from ipaddress import IPv4Address
 from random import getrandbits
