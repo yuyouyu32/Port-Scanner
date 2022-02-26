@@ -3,6 +3,8 @@ import logging
 logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 from scapy.all import *
 from prettytable import PrettyTable
+# from multiprocessing.dummy import Pool as ThreadPool
+from multiprocessing.pool import ThreadPool
 
 #############################################################################
 # ICMP Codes (Type 3) Used to determine filtering:                          #
@@ -46,11 +48,17 @@ class _PortScanner:
     def set_target(self, new_target):
         self._target = new_target
 
-    def scan(self, ports):
+    def scan(self, ports, threads=True):
         print("%s results for %s" % (self.__scanner__, self._target))
         print("PORT\tSTATE")
-        for port in list(ports):
-            self._scan_port(port)
+        if threads:
+            pool = ThreadPool(16)
+            pool.map(self._scan_port, ports)
+            pool.close()
+            pool.join()
+        else:
+            for port in list(ports):
+                self._scan_port(port)
         self._report()
 
     def _scan_port(self, port):
@@ -134,12 +142,10 @@ class TCPSynScan(_PortScanner):
             self._record_port_state(port, 'Unanswered')
 
         elif resp.haslayer(TCP):
-            if resp.getlayer(TCP).flags == 0x12:
-                rst = sr(IP(dst=self._target)/TCP(sport=src_port, dport=port,
-                         flags="R"), timeout=self._timeout, verbose=False)
+            if resp.getlayer(TCP).flags == 0x12:    # 18 = SA = 0x12
                 self._record_port_state(port, 'Open')
 
-            elif resp.getlayer(TCP).flags == 0x14:
+            elif resp.getlayer(TCP).flags == 0x14:  # 20 = RA = 0x14
                 self._record_port_state(port, 'Closed')
             else:
                 self._record_port_state(port, 'TCP packet resp / filtered')
