@@ -5,7 +5,7 @@ from prettytable import PrettyTable
 
 
 SCAN_METHOD = {'tcp': TCPConnScan, 'syn': TCPSynScan, 'xmas': TCPXmasScan, 'fin': TCPFinScan,
-               'null': TCPNullScan, 'ack': TCPAckScan, 'win': TCPWindowScan, 'udp': UDPScan}
+               'null': TCPNullScan, 'ack': TCPAckScan, 'win': TCPWindowScan, 'udp': UDPScan, 'socket': SocketScan}
 
 ATTACK_METHOD = {'synflood': SYNFlood, 'traceroute': TraceRoute, 'rstattack': RSTAttack,
                  'udpflood': UDPFlood}

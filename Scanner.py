@@ -1,10 +1,11 @@
+from multiprocessing.pool import ThreadPool
+from socket import timeout
+from prettytable import PrettyTable
+from scapy.all import *
 import logging
 
 logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
-from scapy.all import *
-from prettytable import PrettyTable
 # from multiprocessing.dummy import Pool as ThreadPool
-from multiprocessing.pool import ThreadPool
 
 #############################################################################
 # ICMP Codes (Type 3) Used to determine filtering:                          #
@@ -17,7 +18,7 @@ from multiprocessing.pool import ThreadPool
 #############################################################################
 
 __all__ = ["TCPConnScan", "TCPSynScan", "TCPXmasScan", "TCPFinScan",
-           "TCPNullScan", "TCPAckScan", "TCPWindowScan", "UDPScan"]
+           "TCPNullScan", "TCPAckScan", "TCPWindowScan", "UDPScan", "SocketScan"]
 
 
 def print_banner():
@@ -130,6 +131,23 @@ class TCPConnScan(_PortScanner):
                 self._record_port_state(port, 'Closed')
 
 
+class SocketScan(_PortScanner):
+    __scanner__ = "Socket Connect Scan"
+
+    def _scan_port(self, port):
+        s = socket.socket(2, 1)  # 2:socket.AF_INET 1:socket.SOCK_STREAM
+        # AF_INET代表ipv4，SOCK_STREAM代表流式socket，对于发送的是TCP请求
+        # 其实这两个参数不写也没事，因为默认的就是AF_INET和SOCK_STREAM
+        # 连接到address处的套接字，参数为元组格式。有返回值，连接成功时返回0，出错时返回错误编码
+        s.settimeout(self._timeout)
+        resp = s.connect_ex((self._target, port))
+        if resp == 0:  # 如果端口开启
+            self._record_port_state(port, 'Open')
+        else:
+            self._record_port_state(port, 'Closed')
+        s.close()  # 关闭套接字
+
+
 class TCPSynScan(_PortScanner):
     __scanner__ = "TCP SYN Scan"
 
@@ -144,6 +162,8 @@ class TCPSynScan(_PortScanner):
         elif resp.haslayer(TCP):
             if resp.getlayer(TCP).flags == 0x12:    # 18 = SA = 0x12
                 self._record_port_state(port, 'Open')
+                # send_rst = sr(IP(dst=self._target)/TCP(sport=src_port, dport=port,
+                #               flags="R"), timeout=self._timeout, verbose=False)
 
             elif resp.getlayer(TCP).flags == 0x14:  # 20 = RA = 0x14
                 self._record_port_state(port, 'Closed')
