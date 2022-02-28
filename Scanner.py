@@ -1,10 +1,11 @@
+import logging
+
+logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 from multiprocessing.pool import ThreadPool
 from socket import timeout
 from prettytable import PrettyTable
 from scapy.all import *
-import logging
 
-logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 # from multiprocessing.dummy import Pool as ThreadPool
 
 #############################################################################
